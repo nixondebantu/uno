@@ -8,6 +8,7 @@
 import {
   CARD_VALUES,
   PLAYABLE_COLORS,
+  isPlayable,
   type Card,
   type CardType,
   type Color,
@@ -244,26 +245,9 @@ export function setStartingColor(
 // Legal-play check.
 // ---------------------------------------------------------------------------
 
-/**
- * A card is playable if:
- *   • it is a Wild family card (Wild / Wild Draw Four — always legal to put down;
- *     W4 legality is judged afterward via the challenge mechanic, NOT here), OR
- *   • its color matches `currentColor` (which may have been set by a prior Wild), OR
- *   • its type matches the top card's type (number or symbol match).
- *
- * Note we compare on `topCard.type`, not just numbers — symbol cards
- * (skip/reverse/draw_two) also match across colors on type. PRD §4.3.
- */
-export function isPlayable(
-  card: Card,
-  topCard: Card,
-  currentColor: PlayableColor,
-): boolean {
-  if (card.color === 'wild') return true;
-  if (card.color === currentColor) return true;
-  if (card.type === topCard.type) return true;
-  return false;
-}
+// `isPlayable` lives in `@uno/shared` (used by both engine + client hand UI).
+// Re-export so existing internal call sites + tests continue to import from here.
+export { isPlayable } from '@uno/shared';
 
 // ---------------------------------------------------------------------------
 // Play / draw effects.

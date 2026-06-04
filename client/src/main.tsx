@@ -8,17 +8,21 @@ import type { VNode } from 'preact';
 
 import './styles/global.css';
 
-import { connect } from './socket.js';
-import { screen, wireServerEvents } from './store.js';
+import { connect, onConnectionChange } from './socket.js';
+import { isConnected, screen, wireServerEvents } from './store.js';
 import { routeRoomCode, current as currentRoute } from './router.js';
 import { Home } from './screens/Home.js';
 import { Lobby } from './screens/Lobby.js';
+import { Game } from './screens/Game.js';
 import { ToastStack } from './components/ToastStack.js';
 
 // ---------- Boot ----------
 
 connect();
 wireServerEvents();
+onConnectionChange((connected) => {
+  isConnected.value = connected;
+});
 
 // Initial screen derived from URL. The auto-join handshake itself (emit
 // JOIN_ROOM with stored name) is owned by the Home/Lobby screens (P3b) —
@@ -45,7 +49,7 @@ currentRoute.subscribe(() => {
 
 // ---------- Components ----------
 
-function GamePlaceholder(): VNode {
+function EndScreenPlaceholder({ label }: { label: string }): VNode {
   return (
     <main
       style={{
@@ -59,8 +63,8 @@ function GamePlaceholder(): VNode {
       }}
     >
       <div>
-        <h1 style={{ marginBottom: '12px' }}>Game screen coming soon</h1>
-        <p>The play surface ships in phase P4.</p>
+        <h1 style={{ marginBottom: '12px' }}>{label}</h1>
+        <p>This screen ships in phase P5.</p>
       </div>
     </main>
   );
@@ -73,9 +77,11 @@ function ScreenSlot(): VNode {
     case 'lobby':
       return <Lobby />;
     case 'game':
+      return <Game />;
     case 'round_end':
+      return <EndScreenPlaceholder label="Round End" />;
     case 'match_end':
-      return <GamePlaceholder />;
+      return <EndScreenPlaceholder label="Match End" />;
     default:
       return <Home />;
   }

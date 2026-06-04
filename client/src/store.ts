@@ -52,12 +52,25 @@ export const pendingError = signal<PendingError | null>(null);
 
 // ---------- UNO call state ----------
 
-// Derived: you're at 1 card AND you haven't yet been recorded as having
-// called UNO. The actual "did I call" tracking is server-authoritative; we
-// surface a button as long as the player has exactly one card left.
+// Tracks whether *I* have already pressed the UNO button this round. Reset
+// when round ends or a fresh game starts. Server is still authoritative; this
+// just suppresses the local button after it's been clicked.
+export const unoCallEmitted = signal<boolean>(false);
+
+// Set of player ids known to have called UNO for the current at-risk window.
+// Used by the "Catch!" button next to opponents — only show catch when an
+// opponent has 1 card AND has NOT yet called UNO.
+export const unoCalledBy = signal<ReadonlySet<string>>(new Set());
+
+// Derived: I should see the UNO button when I have 1 card left AND haven't
+// already pressed it this round. (Server-authoritative penalty still applies
+// if I don't press in time.)
 export const unoCallable: ReadonlySignal<boolean> = computed(
-  () => myHand.value.length === 1,
+  () => myHand.value.length === 1 && !unoCallEmitted.value,
 );
+
+// Connection status — flipped by `onConnectionChange` in main.tsx.
+export const isConnected = signal<boolean>(true);
 
 // ---------- Round/match end payloads ----------
 
@@ -202,6 +215,8 @@ export function wireServerEvents(): void {
     // Clear any stale round/match end state from a previous game.
     roundEndState.value = null;
     matchEndState.value = null;
+    unoCallEmitted.value = false;
+    unoCalledBy.value = new Set();
   });
 
   on(ServerEvents.GAME_STATE, (payload) => {
@@ -213,6 +228,11 @@ export function wireServerEvents(): void {
   });
 
   on(ServerEvents.YOUR_HAND, (payload) => {
+    // If my hand grows back above 1, I'm no longer in the UNO window, so reset
+    // the local "I called it" flag for the next time I get down to one card.
+    if (payload.hand.length > 1 && unoCallEmitted.value) {
+      unoCallEmitted.value = false;
+    }
     myHand.value = payload.hand;
   });
 
@@ -262,10 +282,22 @@ export function wireServerEvents(): void {
   });
 
   on(ServerEvents.UNO_CALLED, (payload) => {
+    const next = new Set(unoCalledBy.value);
+    next.add(payload.playerId);
+    unoCalledBy.value = next;
+    if (payload.playerId === myId.value) {
+      unoCallEmitted.value = true;
+    }
     pushToast('success', `${findPlayerName(payload.playerId)} called UNO!`);
   });
 
   on(ServerEvents.UNO_CAUGHT, (payload) => {
+    // Catch window closed — remove from at-risk set.
+    if (unoCalledBy.value.has(payload.caughtId)) {
+      const next = new Set(unoCalledBy.value);
+      next.delete(payload.caughtId);
+      unoCalledBy.value = next;
+    }
     pushToast(
       'warn',
       `${findPlayerName(payload.caughtId)} forgot UNO — +${payload.penaltyCards}`,
@@ -316,6 +348,8 @@ export function wireServerEvents(): void {
     if (prev) {
       roomState.value = { ...prev, status: 'round_end' };
     }
+    unoCallEmitted.value = false;
+    unoCalledBy.value = new Set();
   });
 
   on(ServerEvents.MATCH_END, (payload) => {

@@ -91,3 +91,23 @@ export function isActionCard(c: Card): boolean {
 export function isWildCard(c: Card): boolean {
   return WILD_TYPES.has(c.type);
 }
+
+/**
+ * A card is playable if:
+ *   • it is a Wild family card (Wild / Wild Draw Four — always legal to put down;
+ *     W4 legality is judged afterward via the challenge mechanic, NOT here), OR
+ *   • its color matches `currentColor` (which may have been set by a prior Wild), OR
+ *   • its type matches the top card's type (number or symbol match).
+ *
+ * Pure function — shared between server rules engine and client hand UI.
+ */
+export function isPlayable(
+  card: Card,
+  topCard: Card,
+  currentColor: PlayableColor,
+): boolean {
+  if (card.color === 'wild') return true;
+  if (card.color === currentColor) return true;
+  if (card.type === topCard.type) return true;
+  return false;
+}
