@@ -3,10 +3,10 @@
 Plan: `plan/BUILD_PLAN.md`
 
 ## Current state
-- Active phase: P2
-- Last agent: P2b-turnController
+- Active phase: P2 → P3
+- Last agent: P2c-sockets
 - Blockers: none
-- Next action: P2 — fan out P2a/P2b/P2c in parallel
+- Next action: P3 — fan out P3a (client core) + P3b (Home/Lobby) in parallel
 
 ## Phases
 - [x] P0 — Skeleton
@@ -20,7 +20,7 @@ Plan: `plan/BUILD_PLAN.md`
 - [x] P1b — game engine (pure fns) + Vitest suite (58 tests passing)
 - [x] P2a — roomManager
 - [x] P2b — turnController
-- [ ] P2c — sockets + reconnect
+- [x] P2c — sockets + reconnect
 - [ ] P3a — client socket/store/router
 - [ ] P3b — Home + Lobby screens
 - [ ] P4a — card SVG + Hand + piles
@@ -43,3 +43,4 @@ Plan: `plan/BUILD_PLAN.md`
 - 2026-06-04 P1b: engine — pure fns, injected RNG, 58 tests passing. W4 challenge uses color-match-on-snapshot per official.
 - 2026-06-04 P2a: roomManager — code gen + lifecycle + host transfer + GC, 46 tests added.
 - 2026-06-04 P2b: turnController — timer + mutex + W4 flow + disconnect skipping + 22 tests added.
+- 2026-06-04 P2c: sockets + reconnect — wired all ClientEvents → roomManager/turnController under per-room mutex. TurnEvents fan out to Socket.io (broadcast for public, registry-routed for private hand/error). Added playerToken (UUID v4) reconnect: rejoin with stored token restores seat + replays game_state + your_hand. Minimal turnController.handleDisconnect for no-timer rooms (5s forced auto-draw). Added shared events: set_starting_color, pass_turn, kick_spectator, awaiting_starting_color, playable_drawn, game_paused, game_resumed. Added ErrorCodes: already_started, not_in_room, not_current_player. Periodic 60s GC in index.ts destroys idle rooms + cleans turnController state. 8 socket integration tests added (in-process io.Server + socket.io-client), 134 tests total passing.

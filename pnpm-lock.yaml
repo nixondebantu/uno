@@ -51,6 +51,9 @@ importers:
       '@types/node':
         specifier: ^20.17.6
         version: 20.19.41
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
       tsx:
         specifier: ^4.19.2
         version: 4.22.4

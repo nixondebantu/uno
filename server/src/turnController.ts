@@ -146,6 +146,8 @@ export interface TurnControllerOptions {
   unoCatchWindowMs?: number;
   /** Used when settings.turnTimerSeconds is null (default 10s). */
   fallbackTimerSeconds?: number;
+  /** Forced auto-draw delay when active player disconnects under no-timer settings (default 5s). */
+  disconnectGraceMs?: number;
   /** Injectable RNG factory — defaults to seeded Mulberry32 at deal time. */
   rngFactory?: (seed: number) => RNG;
 }
@@ -155,7 +157,10 @@ export class TurnController {
   private readonly w4WindowMs: number;
   private readonly unoCatchWindowMs: number;
   private readonly fallbackTimerSeconds: number;
+  private readonly disconnectGraceMs: number;
   private readonly rngFactory: (seed: number) => RNG;
+  // Per-room "active player disconnected, no turn timer" forced-skip timers.
+  private readonly forcedSkipTimers = new Map<string, NodeJS.Timeout>();
 
   // Per-room mutex chains. Each entry is the tail promise.
   private readonly mutex = new Map<string, Promise<unknown>>();
@@ -182,6 +187,7 @@ export class TurnController {
     this.w4WindowMs = opts.w4ChallengeWindowMs ?? 5000;
     this.unoCatchWindowMs = opts.unoCatchWindowMs ?? 2000;
     this.fallbackTimerSeconds = opts.fallbackTimerSeconds ?? 10;
+    this.disconnectGraceMs = opts.disconnectGraceMs ?? 5000;
     this.rngFactory = opts.rngFactory ?? makeSeededRng;
   }
 
@@ -925,6 +931,41 @@ export class TurnController {
     this.preCalledUno.delete(roomCode);
     this.awaitingColor.delete(roomCode);
     this.mutex.delete(roomCode);
+    const forced = this.forcedSkipTimers.get(roomCode);
+    if (forced) {
+      clearTimeout(forced);
+      this.forcedSkipTimers.delete(roomCode);
+    }
+  }
+
+  /**
+   * Called by sockets layer when a player disconnects. If the disconnected
+   * player has the active turn AND no turn timer is configured (settings
+   * turnTimerSeconds === null), schedule a 5-second forced auto-draw + advance
+   * so the room doesn't deadlock. When the timer IS configured, the existing
+   * turn timer already handles auto-draw on expiry.
+   *
+   * Idempotent across repeat disconnects on the same turn.
+   */
+  handleDisconnect(room: RoomRecord, playerToken: string, now: number): void {
+    void playerToken;
+    void now;
+    if (room.status !== 'playing' || !room.game) return;
+    if (room.settings.turnTimerSeconds !== null) return; // existing timer covers it
+    const idx = room.game.currentTurnIndex;
+    const enginePlayer = room.game.players[idx];
+    if (!enginePlayer) return;
+    const record = room.players.find((p) => p.id === enginePlayer.id);
+    if (!record || record.isConnected) return; // not the disconnected player
+    if (this.forcedSkipTimers.has(room.code)) return;
+    if (this.pendingW4.has(room.code)) return; // W4 has its own timeout
+    const handle = setTimeout(() => {
+      this.forcedSkipTimers.delete(room.code);
+      void this.withRoomLock(room.code, () => {
+        this.onTimerExpiry(room, Date.now());
+      });
+    }, this.disconnectGraceMs);
+    this.forcedSkipTimers.set(room.code, handle);
   }
 
   // -------------------------------------------------------------------------

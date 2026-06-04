@@ -10,13 +10,16 @@ export const ClientEvents = Object.freeze({
   CREATE_ROOM: 'create_room',
   JOIN_ROOM: 'join_room',
   START_GAME: 'start_game',
+  SET_STARTING_COLOR: 'set_starting_color',
   PLAY_CARD: 'play_card',
   DRAW_CARD: 'draw_card',
+  PASS_TURN: 'pass_turn',
   CALL_UNO: 'call_uno',
   CATCH_UNO: 'catch_uno',
   LEAVE_ROOM: 'leave_room',
   UPDATE_SETTINGS: 'update_settings',
   PROMOTE_SPECTATOR: 'promote_spectator',
+  KICK_SPECTATOR: 'kick_spectator',
   CHALLENGE_W4: 'challenge_w4',
 } as const);
 
@@ -38,6 +41,10 @@ export interface JoinRoomPayload {
 
 export type StartGamePayload = Record<string, never>;
 
+export interface SetStartingColorPayload {
+  color: PlayableColor;
+}
+
 export interface PlayCardPayload {
   cardId: string;
   // Required when the played card is Wild or Wild Draw Four.
@@ -45,6 +52,8 @@ export interface PlayCardPayload {
 }
 
 export type DrawCardPayload = Record<string, never>;
+
+export type PassTurnPayload = Record<string, never>;
 
 export type CallUnoPayload = Record<string, never>;
 
@@ -59,6 +68,10 @@ export interface UpdateSettingsPayload {
 }
 
 export interface PromoteSpectatorPayload {
+  playerId: string;
+}
+
+export interface KickSpectatorPayload {
   playerId: string;
 }
 
@@ -89,6 +102,10 @@ export const ServerEvents = Object.freeze({
   W4_CHALLENGE_PROMPT: 'w4_challenge_prompt',
   W4_CHALLENGE_RESULT: 'w4_challenge_result',
   PLAYER_TOKEN: 'player_token',
+  AWAITING_STARTING_COLOR: 'awaiting_starting_color',
+  PLAYABLE_DRAWN: 'playable_drawn',
+  GAME_PAUSED: 'game_paused',
+  GAME_RESUMED: 'game_resumed',
 } as const);
 
 export type ServerEventName = (typeof ServerEvents)[keyof typeof ServerEvents];
@@ -190,6 +207,20 @@ export interface PlayerTokenPayload {
   playerToken: string;
 }
 
+export interface AwaitingStartingColorPayload {
+  hostId: string;
+}
+
+export interface PlayableDrawnPayload {
+  card: Card;
+}
+
+export interface GamePausedPayload {
+  reason: 'too_few_connected' | 'all_disconnected';
+}
+
+export type GameResumedPayload = Record<string, never>;
+
 // ---------- Error codes ----------
 
 export type ErrorCode =
@@ -203,4 +234,7 @@ export type ErrorCode =
   | 'game_not_started'
   | 'not_host'
   | 'invalid_settings'
-  | 'invalid_name';
+  | 'invalid_name'
+  | 'already_started'
+  | 'not_in_room'
+  | 'not_current_player';

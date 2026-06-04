@@ -5,6 +5,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 
+import { TurnController } from "./turnController.js";
+import { SocketRegistry } from "./reconnect.js";
+import {
+  buildTurnEvents,
+  defaultRoomsDeps,
+  wireSockets,
+} from "./sockets.js";
+import { runGc } from "./roomManager.js";
+
 // In dev (tsx) __filename points at server/src/index.ts.
 // In prod (tsc build) it points at server/dist/index.js.
 // Either way, the client dist lives at <repoRoot>/client/dist, which is
@@ -12,10 +21,6 @@ import fs from "node:fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Candidate locations for the built client. We try in order:
-// 1. <thisFile>/../../client/dist           (dev: server/src/.. -> server -> uno -> client/dist; same for server/dist)
-// 2. <thisFile>/../../../client/dist        (Docker runtime layout where server/dist is nested differently)
-// 3. <cwd>/client/dist                      (workspace root fallback)
 function resolveClientDist(): string | null {
   const candidates = [
     path.resolve(__dirname, "../../client/dist"),
@@ -42,7 +47,6 @@ app.get("/health", (_req, res) => {
 const clientDist = resolveClientDist();
 if (clientDist) {
   app.use(express.static(clientDist));
-  // SPA fallback: serve index.html for any non-API/non-socket GET that isn't a static asset.
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/socket.io")) return next();
     const indexFile = path.join(clientDist, "index.html");
@@ -57,20 +61,28 @@ if (clientDist) {
   console.log("no client dist found — running in API-only mode");
 }
 
-io.on("connection", (socket) => {
-  console.log(`socket connected: ${socket.id}`);
+// --- Real-time wiring ------------------------------------------------------
 
-  socket.on("ping_test", (payload: unknown) => {
-    socket.emit("pong_test", {
-      echo: payload,
-      serverTime: Date.now(),
-    });
-  });
+const registry = new SocketRegistry();
+const rooms = defaultRoomsDeps();
+const turnEvents = buildTurnEvents(io, rooms, registry);
+const turn = new TurnController(turnEvents);
 
-  socket.on("disconnect", (reason) => {
-    console.log(`socket disconnected: ${socket.id} (${reason})`);
+wireSockets(io, { rooms, turn, registry });
+
+// Periodic GC — 30-min inactivity, 5-min all-disconnected grace.
+const GC_INTERVAL_MS = 60 * 1000;
+setInterval(() => {
+  const destroyed = runGc(Date.now(), {
+    inactivityMs: 30 * 60 * 1000,
+    allDisconnectedGraceMs: 5 * 60 * 1000,
   });
-});
+  for (const code of destroyed) {
+    turn.cleanup(code);
+    io.in(code).disconnectSockets(true);
+    console.log(`gc destroyed room ${code}`);
+  }
+}, GC_INTERVAL_MS).unref();
 
 const PORT = Number(process.env.PORT ?? 3000);
 httpServer.listen(PORT, () => {
