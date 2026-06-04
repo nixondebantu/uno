@@ -238,3 +238,51 @@ export type ErrorCode =
   | 'already_started'
   | 'not_in_room'
   | 'not_current_player';
+
+// ---------- Payload mapping types (for typed socket wrappers) ----------
+
+export interface ClientPayloadMap {
+  [ClientEvents.CREATE_ROOM]: CreateRoomPayload;
+  [ClientEvents.JOIN_ROOM]: JoinRoomPayload;
+  [ClientEvents.START_GAME]: StartGamePayload;
+  [ClientEvents.SET_STARTING_COLOR]: SetStartingColorPayload;
+  [ClientEvents.PLAY_CARD]: PlayCardPayload;
+  [ClientEvents.DRAW_CARD]: DrawCardPayload;
+  [ClientEvents.PASS_TURN]: PassTurnPayload;
+  [ClientEvents.CALL_UNO]: CallUnoPayload;
+  [ClientEvents.CATCH_UNO]: CatchUnoPayload;
+  [ClientEvents.LEAVE_ROOM]: LeaveRoomPayload;
+  [ClientEvents.UPDATE_SETTINGS]: UpdateSettingsPayload;
+  [ClientEvents.PROMOTE_SPECTATOR]: PromoteSpectatorPayload;
+  [ClientEvents.KICK_SPECTATOR]: KickSpectatorPayload;
+  [ClientEvents.CHALLENGE_W4]: ChallengeW4Payload;
+}
+
+export interface ServerPayloadMap {
+  [ServerEvents.ROOM_CREATED]: RoomCreatedPayload;
+  [ServerEvents.ROOM_JOINED]: RoomJoinedPayload;
+  [ServerEvents.ROOM_UPDATED]: RoomUpdatedPayload;
+  [ServerEvents.GAME_STARTED]: GameStartedPayload;
+  [ServerEvents.GAME_STATE]: GameStatePayload;
+  [ServerEvents.YOUR_HAND]: YourHandPayload;
+  [ServerEvents.TURN_START]: TurnStartPayload;
+  [ServerEvents.CARD_PLAYED]: CardPlayedPayload;
+  [ServerEvents.CARD_DRAWN]: CardDrawnPayload;
+  [ServerEvents.UNO_CALLED]: UnoCalledPayload;
+  [ServerEvents.UNO_CAUGHT]: UnoCaughtPayload;
+  [ServerEvents.PLAYER_DISCONNECTED]: PlayerDisconnectedPayload;
+  [ServerEvents.PLAYER_RECONNECTED]: PlayerReconnectedPayload;
+  [ServerEvents.ROUND_END]: RoundEndPayload;
+  [ServerEvents.MATCH_END]: MatchEndPayload;
+  [ServerEvents.ERROR]: ErrorPayload;
+  [ServerEvents.W4_CHALLENGE_PROMPT]: W4ChallengePromptPayload;
+  [ServerEvents.W4_CHALLENGE_RESULT]: W4ChallengeResultPayload;
+  [ServerEvents.PLAYER_TOKEN]: PlayerTokenPayload;
+  [ServerEvents.AWAITING_STARTING_COLOR]: AwaitingStartingColorPayload;
+  [ServerEvents.PLAYABLE_DRAWN]: PlayableDrawnPayload;
+  [ServerEvents.GAME_PAUSED]: GamePausedPayload;
+  [ServerEvents.GAME_RESUMED]: GameResumedPayload;
+}
+
+export type ClientPayloadFor<E extends ClientEventName> = ClientPayloadMap[E];
+export type ServerPayloadFor<E extends ServerEventName> = ServerPayloadMap[E];

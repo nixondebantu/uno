@@ -1,64 +1,94 @@
-import { render } from "preact";
-import { signal } from "@preact/signals";
-import { io, type Socket } from "socket.io-client";
+// Client boot. Wires socket transport into the store, picks an initial screen
+// from the URL, and renders the App switch.
+//
+// Anything beyond the switch (full screens) is owned by other phase agents.
 
-// In dev (Vite on :5173), connect to server on :3000.
-// In prod (Express serves the SPA), use same-origin.
-const isDev = import.meta.env.DEV;
-const SERVER_URL = isDev ? "http://localhost:3000" : window.location.origin;
+import { render } from 'preact';
+import type { VNode } from 'preact';
 
-const status = signal<string>("connecting...");
-const pongPayload = signal<unknown>(null);
+import './styles/global.css';
 
-const socket: Socket = io(SERVER_URL, {
-  transports: ["websocket", "polling"],
+import { connect } from './socket.js';
+import { screen, wireServerEvents } from './store.js';
+import { routeRoomCode, current as currentRoute } from './router.js';
+import { Home } from './screens/Home.js';
+import { Lobby } from './screens/Lobby.js';
+import { ToastStack } from './components/ToastStack.js';
+
+// ---------- Boot ----------
+
+connect();
+wireServerEvents();
+
+// Initial screen derived from URL. The auto-join handshake itself (emit
+// JOIN_ROOM with stored name) is owned by the Home/Lobby screens (P3b) —
+// here we only set the entry screen so the right component mounts.
+function syncScreenFromUrl(): void {
+  const code = routeRoomCode();
+  if (code) {
+    screen.value = 'lobby';
+  } else {
+    screen.value = 'home';
+  }
+}
+syncScreenFromUrl();
+
+// Re-derive on browser nav.
+currentRoute.subscribe(() => {
+  // Only re-derive when we're in pre-game screens; once the server tells us a
+  // game has started, store events drive `screen` directly.
+  const s = screen.value;
+  if (s === 'home' || s === 'lobby') {
+    syncScreenFromUrl();
+  }
 });
 
-socket.on("connect", () => {
-  status.value = `connected (${socket.id})`;
-  socket.emit("ping_test", { clientTime: Date.now(), hello: "uno" });
-});
+// ---------- Components ----------
 
-socket.on("disconnect", (reason) => {
-  status.value = `disconnected: ${reason}`;
-});
-
-socket.on("pong_test", (payload: unknown) => {
-  pongPayload.value = payload;
-});
-
-function App() {
+function GamePlaceholder(): VNode {
   return (
     <main
       style={{
-        fontFamily: "system-ui, sans-serif",
-        padding: "24px",
-        maxWidth: "640px",
-        margin: "0 auto",
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+        color: 'var(--color-text-muted)',
       }}
     >
-      <h1>UNO — P0 skeleton</h1>
-      <p>
-        <strong>Socket:</strong> {status.value}
-      </p>
-      <p>
-        <strong>pong_test:</strong>
-      </p>
-      <pre
-        style={{
-          background: "#f4f4f5",
-          padding: "12px",
-          borderRadius: "8px",
-          overflow: "auto",
-        }}
-      >
-        {pongPayload.value
-          ? JSON.stringify(pongPayload.value, null, 2)
-          : "(awaiting reply)"}
-      </pre>
+      <div>
+        <h1 style={{ marginBottom: '12px' }}>Game screen coming soon</h1>
+        <p>The play surface ships in phase P4.</p>
+      </div>
     </main>
   );
 }
 
-const root = document.getElementById("app");
+function ScreenSlot(): VNode {
+  switch (screen.value) {
+    case 'home':
+      return <Home />;
+    case 'lobby':
+      return <Lobby />;
+    case 'game':
+    case 'round_end':
+    case 'match_end':
+      return <GamePlaceholder />;
+    default:
+      return <Home />;
+  }
+}
+
+function App(): VNode {
+  return (
+    <>
+      <ScreenSlot />
+      <ToastStack />
+    </>
+  );
+}
+
+const root = document.getElementById('app');
 if (root) render(<App />, root);

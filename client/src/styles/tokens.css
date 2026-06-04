@@ -1,0 +1,81 @@
+/* Design tokens — colors, spacing, type, radii, shadows.
+ * Keep this file free of selectors that aren't `:root` so it stays a pure
+ * variable layer; component styles live in global.css or co-located files.
+ */
+
+:root {
+  /* UNO card colors */
+  --uno-red: #d32f2f;
+  --uno-red-dark: #b71c1c;
+  --uno-blue: #1976d2;
+  --uno-blue-dark: #0d47a1;
+  --uno-green: #388e3c;
+  --uno-green-dark: #1b5e20;
+  --uno-yellow: #fbc02d;
+  --uno-yellow-dark: #f57f17;
+  --uno-wild-gradient: conic-gradient(
+    from 45deg,
+    var(--uno-red) 0deg 90deg,
+    var(--uno-yellow) 90deg 180deg,
+    var(--uno-green) 180deg 270deg,
+    var(--uno-blue) 270deg 360deg
+  );
+
+  /* Neutrals */
+  --color-bg: #0f1115;
+  --color-surface: #1a1d24;
+  --color-surface-2: #242832;
+  --color-border: #353a45;
+  --color-text: #f5f5f5;
+  --color-text-muted: #b5b8c2;
+  --color-text-dim: #7c8089;
+
+  /* Semantic */
+  --color-info: #3b82f6;
+  --color-success: #22c55e;
+  --color-warn: #f59e0b;
+  --color-error: #ef4444;
+
+  /* Font stack */
+  --font-system:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Font sizes (modular scale, 1.125x) */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
+  --fs-4xl: 3rem;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Border radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  /* Layout */
+  --max-content: 720px;
+  --z-toast: 1000;
+  --z-modal: 1100;
+}
