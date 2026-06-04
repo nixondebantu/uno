@@ -4,7 +4,7 @@ Plan: `plan/BUILD_PLAN.md`
 
 ## Current state
 - Active phase: P2
-- Last agent: P1b-engine
+- Last agent: P2a-roomManager
 - Blockers: none
 - Next action: P2 — fan out P2a/P2b/P2c in parallel
 
@@ -18,7 +18,7 @@ Plan: `plan/BUILD_PLAN.md`
   - [x] socket ping/pong verified end-to-end
 - [x] P1a — shared types (`shared/src/{cards,events,state}.ts`)
 - [x] P1b — game engine (pure fns) + Vitest suite (58 tests passing)
-- [ ] P2a — roomManager  ← NEXT
+- [x] P2a — roomManager
 - [ ] P2b — turnController
 - [ ] P2c — sockets + reconnect
 - [ ] P3a — client socket/store/router
@@ -41,3 +41,4 @@ Plan: `plan/BUILD_PLAN.md`
 - 2026-06-04 P0: scaffolded pnpm workspace (shared/server/client), strict TS everywhere, Express + Socket.io with ping_test→pong_test echo, Vitest smoke green, Vite+Preact client renders pong reply, multi-stage Dockerfile (pnpm 10 deploy --legacy) builds & runs (image uno:latest, ~143MB) — `/health` returns `{ok:true}`, SPA served from `/app/client/dist` in container.
 - 2026-06-04 P1a: shared types — Card/Color/CardType, PlayerPublic/Private, RoomPublic, PublicGameState, all client/server event payloads + ErrorCode union.
 - 2026-06-04 P1b: engine — pure fns, injected RNG, 58 tests passing. W4 challenge uses color-match-on-snapshot per official.
+- 2026-06-04 P2a: roomManager — code gen + lifecycle + host transfer + GC, 46 tests added.
