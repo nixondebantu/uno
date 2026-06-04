@@ -4,9 +4,9 @@ Plan: `plan/BUILD_PLAN.md`
 
 ## Current state
 - Active phase: P1
-- Last agent: P0-skeleton
+- Last agent: P1a-shared-types
 - Blockers: none
-- Next action: P1a — shared types (`shared/src/{cards,events,state}.ts` per plan §P1a)
+- Next action: P1b — game engine (pure fns) + Vitest suite (`server/src/gameEngine.ts` per plan §P1b)
 
 ## Phases
 - [x] P0 — Skeleton
@@ -16,8 +16,8 @@ Plan: `plan/BUILD_PLAN.md`
   - [x] Express + Socket.io boot, serves client dist on :3000
   - [x] Vitest configured in server
   - [x] socket ping/pong verified end-to-end
-- [ ] P1a — shared types (`shared/src/{cards,events,state}.ts`)  ← NEXT
-- [ ] P1b — game engine (pure fns) + Vitest suite
+- [x] P1a — shared types (`shared/src/{cards,events,state}.ts`)
+- [ ] P1b — game engine (pure fns) + Vitest suite  ← NEXT
 - [ ] P2a — roomManager
 - [ ] P2b — turnController
 - [ ] P2c — sockets + reconnect
@@ -39,3 +39,4 @@ Plan: `plan/BUILD_PLAN.md`
 ## Notes
 <!-- agents append one line per run: YYYY-MM-DD <phase-id>: <one-line summary> -->
 - 2026-06-04 P0: scaffolded pnpm workspace (shared/server/client), strict TS everywhere, Express + Socket.io with ping_test→pong_test echo, Vitest smoke green, Vite+Preact client renders pong reply, multi-stage Dockerfile (pnpm 10 deploy --legacy) builds & runs (image uno:latest, ~143MB) — `/health` returns `{ok:true}`, SPA served from `/app/client/dist` in container.
+- 2026-06-04 P1a: shared types — Card/Color/CardType, PlayerPublic/Private, RoomPublic, PublicGameState, all client/server event payloads + ErrorCode union.

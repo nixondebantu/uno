@@ -1,2 +1,4 @@
-// @uno/shared — barrel. Real exports land in P1a (cards, events, state).
-export {};
+// @uno/shared — public barrel.
+export * from './cards.js';
+export * from './state.js';
+export * from './events.js';
