@@ -4,7 +4,7 @@ Plan: `plan/BUILD_PLAN.md`
 
 ## Current state
 - Active phase: P2
-- Last agent: P2a-roomManager
+- Last agent: P2b-turnController
 - Blockers: none
 - Next action: P2 — fan out P2a/P2b/P2c in parallel
 
@@ -19,7 +19,7 @@ Plan: `plan/BUILD_PLAN.md`
 - [x] P1a — shared types (`shared/src/{cards,events,state}.ts`)
 - [x] P1b — game engine (pure fns) + Vitest suite (58 tests passing)
 - [x] P2a — roomManager
-- [ ] P2b — turnController
+- [x] P2b — turnController
 - [ ] P2c — sockets + reconnect
 - [ ] P3a — client socket/store/router
 - [ ] P3b — Home + Lobby screens
@@ -42,3 +42,4 @@ Plan: `plan/BUILD_PLAN.md`
 - 2026-06-04 P1a: shared types — Card/Color/CardType, PlayerPublic/Private, RoomPublic, PublicGameState, all client/server event payloads + ErrorCode union.
 - 2026-06-04 P1b: engine — pure fns, injected RNG, 58 tests passing. W4 challenge uses color-match-on-snapshot per official.
 - 2026-06-04 P2a: roomManager — code gen + lifecycle + host transfer + GC, 46 tests added.
+- 2026-06-04 P2b: turnController — timer + mutex + W4 flow + disconnect skipping + 22 tests added.
