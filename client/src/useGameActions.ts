@@ -9,9 +9,14 @@
 import { ClientEvents, type PlayableColor } from '@uno/shared';
 
 import { emit } from './socket.js';
+import { navigate } from './router.js';
 import {
   awaitingStartingColor,
   playableDrawn,
+  roomState,
+  roundEndState,
+  matchEndState,
+  screen,
   unoCallEmitted,
   w4ChallengePrompt,
 } from './store.js';
@@ -24,6 +29,9 @@ export interface GameActions {
   catchUno(targetId: string): void;
   respondW4(challenge: boolean): void;
   setStartingColor(color: PlayableColor): void;
+  nextRound(): void;
+  playAgain(): void;
+  leaveRoom(): void;
 }
 
 /**
@@ -57,6 +65,22 @@ export function useGameActions(): GameActions {
     setStartingColor(color) {
       emit(ClientEvents.SET_STARTING_COLOR, { color });
       awaitingStartingColor.value = false;
+    },
+    nextRound() {
+      emit(ClientEvents.NEXT_ROUND, {});
+    },
+    playAgain() {
+      emit(ClientEvents.PLAY_AGAIN, {});
+    },
+    leaveRoom() {
+      emit(ClientEvents.LEAVE_ROOM, {});
+      // Reset local state so re-entering /home is clean. The server will also
+      // send room_updated to others; for the leaver we just navigate home.
+      roomState.value = null;
+      roundEndState.value = null;
+      matchEndState.value = null;
+      screen.value = 'home';
+      navigate('/', { replace: true });
     },
   };
 }

@@ -72,6 +72,15 @@ export const unoCallable: ReadonlySignal<boolean> = computed(
 // Connection status — flipped by `onConnectionChange` in main.tsx.
 export const isConnected = signal<boolean>(true);
 
+// True when the local viewer is in the room's spectator list (not a player).
+// Derived — recomputes whenever roomState or myId changes.
+export const isSpectator: ReadonlySignal<boolean> = computed(() => {
+  const room = roomState.value;
+  const me = myId.value;
+  if (!room || !me) return false;
+  return room.spectators.some((s) => s.id === me);
+});
+
 // ---------- Round/match end payloads ----------
 
 export interface RoundEndState {
@@ -181,6 +190,15 @@ export function wireServerEvents(): void {
     roomState.value = payload.roomState;
     gameState.value = payload.roomState.game;
     navigateForRoom(payload.roomState);
+    // PLAY_AGAIN path: server resets to 'waiting' + null game. Clear any
+    // round/match-end overlays + UNO bookkeeping so the lobby renders fresh.
+    if (payload.roomState.status === 'waiting') {
+      roundEndState.value = null;
+      matchEndState.value = null;
+      myHand.value = [];
+      unoCallEmitted.value = false;
+      unoCalledBy.value = new Set();
+    }
   });
 
   on(ServerEvents.ROOM_UPDATED, (payload) => {

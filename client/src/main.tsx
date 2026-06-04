@@ -14,7 +14,10 @@ import { routeRoomCode, current as currentRoute } from './router.js';
 import { Home } from './screens/Home.js';
 import { Lobby } from './screens/Lobby.js';
 import { Game } from './screens/Game.js';
+import { RoundEnd } from './screens/RoundEnd.js';
+import { MatchEnd } from './screens/MatchEnd.js';
 import { ToastStack } from './components/ToastStack.js';
+import { ConnectionLostBanner } from './components/ConnectionLostBanner.js';
 
 // ---------- Boot ----------
 
@@ -49,27 +52,6 @@ currentRoute.subscribe(() => {
 
 // ---------- Components ----------
 
-function EndScreenPlaceholder({ label }: { label: string }): VNode {
-  return (
-    <main
-      style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-        color: 'var(--color-text-muted)',
-      }}
-    >
-      <div>
-        <h1 style={{ marginBottom: '12px' }}>{label}</h1>
-        <p>This screen ships in phase P5.</p>
-      </div>
-    </main>
-  );
-}
-
 function ScreenSlot(): VNode {
   switch (screen.value) {
     case 'home':
@@ -79,9 +61,9 @@ function ScreenSlot(): VNode {
     case 'game':
       return <Game />;
     case 'round_end':
-      return <EndScreenPlaceholder label="Round End" />;
+      return <RoundEnd />;
     case 'match_end':
-      return <EndScreenPlaceholder label="Match End" />;
+      return <MatchEnd />;
     default:
       return <Home />;
   }
@@ -90,6 +72,7 @@ function ScreenSlot(): VNode {
 function App(): VNode {
   return (
     <>
+      <ConnectionLostBanner />
       <ScreenSlot />
       <ToastStack />
     </>

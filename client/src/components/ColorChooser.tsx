@@ -3,8 +3,10 @@
 // choice when the very first card is a Wild.
 
 import type { JSX } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import type { PlayableColor } from '@uno/shared';
+
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 
 export interface ColorChooserProps {
   open: boolean;
@@ -32,6 +34,9 @@ export function ColorChooser({
   onCancel,
   title = 'Choose a color',
 }: ColorChooserProps): JSX.Element | null {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, open);
+
   // Esc closes if cancellable.
   useEffect(() => {
     if (!open || !onCancel) return undefined;
@@ -54,7 +59,7 @@ export function ColorChooser({
         if (e.target === e.currentTarget && onCancel) onCancel();
       }}
     >
-      <div class="modal color-chooser">
+      <div class="modal color-chooser" ref={modalRef}>
         <h2 class="color-chooser__title">{title}</h2>
         <div class="color-chooser__grid">
           {COLORS.map((c) => (

@@ -78,4 +78,15 @@
   --max-content: 720px;
   --z-toast: 1000;
   --z-modal: 1100;
+  --z-banner: 1200;
+
+  /* Focus */
+  --color-focus: #93c5fd;        /* light blue ring */
+  --focus-ring: 0 0 0 3px rgba(147, 197, 253, 0.55);
+
+  /* Safe-area aliases (iOS notch / Android edge) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }

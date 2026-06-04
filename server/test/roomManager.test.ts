@@ -11,6 +11,7 @@ import {
   markConnected,
   markDisconnected,
   promoteSpectator,
+  resetMatchScores,
   RoomError,
   runGc,
   setGameState,
@@ -463,6 +464,44 @@ describe('runGc', () => {
 // ---------------------------------------------------------------------------
 // destroyRoom / listRooms
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// resetMatchScores
+// ---------------------------------------------------------------------------
+
+describe('resetMatchScores', () => {
+  function setupMatchEnd(): RoomRecord {
+    const room = createRoom(host('Alice', 'tok-a'), {}, T0);
+    joinRoom(room.code, guest('Bob', 'tok-b'), T0 + 1);
+    // Simulate a finished match: cumulative scores + match_end status.
+    const a = room.players[0]!;
+    const b = room.players[1]!;
+    a.score = 520;
+    b.score = 310;
+    setGameState(room, null, 'match_end');
+    return room;
+  }
+
+  it('host-only', () => {
+    const room = setupMatchEnd();
+    expect(() => resetMatchScores(room, 'tok-b')).toThrow(RoomError);
+  });
+
+  it('refuses when status !== match_end', () => {
+    const room = createRoom(host('Alice', 'tok-a'), {}, T0);
+    joinRoom(room.code, guest('Bob', 'tok-b'), T0 + 1);
+    expect(() => resetMatchScores(room, 'tok-a')).toThrow(RoomError);
+  });
+
+  it('zeroes scores + resets to waiting + clears game', () => {
+    const room = setupMatchEnd();
+    resetMatchScores(room, 'tok-a');
+    expect(room.status).toBe('waiting');
+    expect(room.game).toBeNull();
+    expect(room.players[0]?.score).toBe(0);
+    expect(room.players[1]?.score).toBe(0);
+  });
+});
 
 describe('destroyRoom + listRooms', () => {
   it('destroyRoom is case-insensitive', () => {

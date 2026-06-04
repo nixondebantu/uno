@@ -104,14 +104,25 @@ select {
 input:focus,
 select:focus,
 button:focus-visible {
-  outline: 2px solid var(--color-info);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
-/* Toast stack — top-right floating */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Suppress focus rings only when triggered by mouse (focus-visible already
+   handles this in modern browsers — kept here for older WebKit). */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Toast stack — top-right on desktop, top-center on mobile */
 .toast-stack {
   position: fixed;
-  top: var(--space-4);
+  top: calc(var(--space-4) + var(--safe-top));
   right: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -119,6 +130,17 @@ button:focus-visible {
   z-index: var(--z-toast);
   pointer-events: none;
   max-width: min(360px, calc(100vw - var(--space-6)));
+}
+
+@media (max-width: 480px) {
+  .toast-stack {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: 90vw;
+    align-items: stretch;
+  }
 }
 
 .toast {
@@ -163,18 +185,111 @@ button:focus-visible {
   max-width: 480px;
   width: 100%;
   border: 1px solid var(--color-border);
+  max-height: calc(100dvh - var(--space-4) * 2);
+  overflow-y: auto;
 }
 
-/* Responsive: full-screen modals on phones */
+/* Responsive: full-screen modals on phones, respecting iOS safe areas. */
 @media (max-width: 480px) {
   .modal {
     max-width: 100%;
     min-height: 100%;
     border-radius: 0;
+    padding:
+      calc(var(--space-5) + var(--safe-top))
+      calc(var(--space-5) + var(--safe-right))
+      calc(var(--space-5) + var(--safe-bottom))
+      calc(var(--space-5) + var(--safe-left));
+    max-height: 100dvh;
   }
   .modal-overlay {
     padding: 0;
   }
+}
+
+/* ---------- Connection-lost banner ---------- */
+.conn-lost {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-banner);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  padding-top: calc(var(--space-2) + var(--safe-top));
+  background: var(--color-error);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+.conn-lost__icon {
+  display: inline-flex;
+  align-items: center;
+  animation: conn-spin 1.1s linear infinite;
+}
+
+@keyframes conn-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conn-lost__icon { animation: none; }
+}
+
+/* ---------- Spectator banner ---------- */
+.spectator-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: center;
+  align-items: center;
+}
+
+.spectator-banner__head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-info);
+}
+
+.spectator-banner__title {
+  font-size: var(--fs-lg);
+  margin: 0;
+}
+
+.spectator-banner__body {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.spectator-banner__others {
+  margin-top: var(--space-2);
+  width: 100%;
+}
+
+.spectator-banner__others-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.spectator-banner__others-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
 /* ---------- PlayerAvatar card ---------- */
@@ -259,6 +374,27 @@ button:focus-visible {
 .avatar--disconnected {
   filter: grayscale(0.85);
   opacity: 0.65;
+}
+
+/* ---------- Breakpoint scaling: tablet + desktop ---------- */
+@media (min-width: 481px) {
+  body {
+    font-size: var(--fs-md);
+  }
+}
+
+@media (min-width: 768px) {
+  /* Slightly larger interaction targets on tablets. */
+  button {
+    padding: var(--space-3) var(--space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop gets richer modal padding. */
+  .modal {
+    padding: var(--space-6);
+  }
 }
 
 /* ---------- ColorChooser ---------- */

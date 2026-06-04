@@ -4,10 +4,11 @@
 // W4_CHALLENGE_RESULT.
 
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 import { roomState, w4ChallengePrompt } from '../store.js';
 import { useGameActions } from '../useGameActions.js';
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 
 const TICK_MS = 100;
 // Server's W4 prompt window is 5s (see turnController). Used only for the
@@ -33,6 +34,9 @@ export function ChallengePrompt(): JSX.Element | null {
     return () => window.clearInterval(handle);
   }, [prompt?.deadlineMs]);
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, prompt !== null);
+
   if (!prompt) return null;
 
   const remainingMs = Math.max(0, prompt.deadlineMs - now);
@@ -49,7 +53,7 @@ export function ChallengePrompt(): JSX.Element | null {
       aria-modal="true"
       aria-label="Wild Draw 4 challenge"
     >
-      <div class="modal challenge-modal">
+      <div class="modal challenge-modal" ref={modalRef}>
         <div
           class="challenge-modal__progress"
           aria-hidden="true"

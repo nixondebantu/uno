@@ -3,11 +3,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-5) var(--space-4) var(--space-6);
+  padding:
+    calc(var(--space-5) + var(--safe-top))
+    calc(var(--space-4) + var(--safe-right))
+    calc(var(--space-6) + var(--safe-bottom))
+    calc(var(--space-4) + var(--safe-left));
   max-width: var(--max-content);
   width: 100%;
   margin: 0 auto;
   gap: var(--space-5);
+}
+
+@media (max-width: 480px) {
+  .root {
+    padding:
+      calc(var(--space-4) + var(--safe-top))
+      calc(var(--space-3) + var(--safe-right))
+      calc(var(--space-5) + var(--safe-bottom))
+      calc(var(--space-3) + var(--safe-left));
+    gap: var(--space-4);
+  }
+  .title {
+    font-size: var(--fs-3xl);
+  }
+  .ctaRow {
+    grid-template-columns: 1fr;
+  }
 }
 
 .title {

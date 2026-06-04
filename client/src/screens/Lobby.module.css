@@ -2,11 +2,42 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: var(--space-4);
+  padding:
+    calc(var(--space-4) + var(--safe-top))
+    calc(var(--space-4) + var(--safe-right))
+    calc(var(--space-4) + var(--safe-bottom))
+    calc(var(--space-4) + var(--safe-left));
   gap: var(--space-5);
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .root {
+    padding:
+      calc(var(--space-3) + var(--safe-top))
+      calc(var(--space-3) + var(--safe-right))
+      calc(var(--space-3) + var(--safe-bottom))
+      calc(var(--space-3) + var(--safe-left));
+    gap: var(--space-4);
+  }
+  .codeBig {
+    font-size: var(--fs-2xl);
+    letter-spacing: 0.15em;
+  }
+}
+
+.spectatorNotice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-info);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--fs-sm);
 }
 
 .header {

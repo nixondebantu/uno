@@ -16,6 +16,7 @@ import { DirectionIndicator } from './DirectionIndicator.js';
 import { Hand } from './Hand.js';
 import { gameState, myHand, myId, roomState } from '../store.js';
 import { useGameActions } from '../useGameActions.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
 
 export function Table(): JSX.Element | null {
   const room = roomState.value;
@@ -30,6 +31,8 @@ export function Table(): JSX.Element | null {
   const isMyTurn = me !== null && currentPlayerId === me;
 
   const actions = useGameActions();
+  const isMobile = useMediaQuery('(max-width: 480px)');
+  const pileWidth = isMobile ? 70 : 100;
 
   return (
     <>
@@ -38,11 +41,13 @@ export function Table(): JSX.Element | null {
           <DiscardPile
             topCard={game.topCard}
             currentColor={game.currentColor}
+            width={pileWidth}
           />
           <DrawPile
             count={game.drawPileCount}
             canDraw={isMyTurn}
             onDraw={() => actions.drawCard()}
+            width={pileWidth}
           />
         </div>
         <div class="table__indicators">

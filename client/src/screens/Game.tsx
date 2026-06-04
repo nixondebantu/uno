@@ -3,30 +3,31 @@
 // Owners:
 //   • P4a: card visuals — Table (piles + indicators + Hand).
 //   • P4b: game-loop UI — GameHeader, OpponentRow, SelfStatus, prompts.
-//
-// Component composition kept thin; per-section state lives in each component
-// reading the store directly.
+//   • P5b: spectator mode swap + ConnectionLostBanner mount point.
 
 import type { JSX } from 'preact';
 
 import { GameHeader } from '../components/GameHeader.js';
 import { OpponentRow } from '../components/OpponentRow.js';
 import { SelfStatus } from '../components/SelfStatus.js';
+import { SpectatorBanner } from '../components/SpectatorBanner.js';
 import { ChallengePrompt } from '../components/ChallengePrompt.js';
 import { StartingColorPrompt } from '../components/StartingColorPrompt.js';
 import { PlayableDrawnPrompt } from '../components/PlayableDrawnPrompt.js';
 import { Table } from '../components/Table.js';
-import { gameState, roomState } from '../store.js';
+import { SpectatorTable } from '../components/SpectatorTable.js';
+import { gameState, isSpectator, roomState } from '../store.js';
 import './Game.css';
 
 export function Game(): JSX.Element {
   const room = roomState.value;
   const game = gameState.value;
+  const spectating = isSpectator.value;
 
   if (!room || !game) {
     return (
       <main class="game">
-        <p class="game__loading">Waiting for game state…</p>
+        <p class="game__loading">Waiting for game state&hellip;</p>
       </main>
     );
   }
@@ -35,13 +36,17 @@ export function Game(): JSX.Element {
     <main class="game">
       <GameHeader />
       <OpponentRow />
-      <Table />
-      <SelfStatus />
+      {spectating ? <SpectatorTable /> : <Table />}
+      {spectating ? <SpectatorBanner /> : <SelfStatus />}
 
-      {/* Floating overlays */}
-      <ChallengePrompt />
-      <StartingColorPrompt />
-      <PlayableDrawnPrompt />
+      {/* Floating overlays — only meaningful for active players. */}
+      {!spectating ? (
+        <>
+          <ChallengePrompt />
+          <StartingColorPrompt />
+          <PlayableDrawnPrompt />
+        </>
+      ) : null}
     </main>
   );
 }

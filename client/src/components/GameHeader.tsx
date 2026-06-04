@@ -4,10 +4,11 @@
 //   • score-table toggle that pops open a side drawer with cumulative scores
 
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { ListOrdered, X } from 'lucide-preact';
 
 import { gameState, roomState } from '../store.js';
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 
 export function GameHeader(): JSX.Element | null {
   const room = roomState.value;
@@ -32,7 +33,7 @@ export function GameHeader(): JSX.Element | null {
           <span class="game-header__round">Round {game.round}</span>
         ) : null}
       </div>
-      <div class="game-header__right">
+      <div class="game-header__right" aria-label={`Room code ${room.code}`}>
         <span class="game-header__code-label">Room</span>
         <span class="game-header__code">{room.code}</span>
       </div>
@@ -51,6 +52,17 @@ interface ScoreDrawerProps {
 function ScoreDrawer({ onClose }: ScoreDrawerProps): JSX.Element {
   const room = roomState.value;
   const players = room ? [...room.players].sort((a, b) => b.score - a.score) : [];
+  const drawerRef = useRef<HTMLElement>(null);
+  useFocusTrap(drawerRef, true);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
     <div
       class="modal-overlay score-drawer__overlay"
@@ -61,7 +73,7 @@ function ScoreDrawer({ onClose }: ScoreDrawerProps): JSX.Element {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <aside class="score-drawer">
+      <aside class="score-drawer" ref={drawerRef}>
         <header class="score-drawer__header">
           <h2>Scores</h2>
           <button

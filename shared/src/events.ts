@@ -21,6 +21,8 @@ export const ClientEvents = Object.freeze({
   PROMOTE_SPECTATOR: 'promote_spectator',
   KICK_SPECTATOR: 'kick_spectator',
   CHALLENGE_W4: 'challenge_w4',
+  NEXT_ROUND: 'next_round',
+  PLAY_AGAIN: 'play_again',
 } as const);
 
 export type ClientEventName = (typeof ClientEvents)[keyof typeof ClientEvents];
@@ -79,6 +81,10 @@ export interface ChallengeW4Payload {
   // true = challenge the W4, false/timeout = accept.
   challenge: boolean;
 }
+
+export type NextRoundPayload = Record<string, never>;
+
+export type PlayAgainPayload = Record<string, never>;
 
 // ---------- Server → Client ----------
 
@@ -256,6 +262,8 @@ export interface ClientPayloadMap {
   [ClientEvents.PROMOTE_SPECTATOR]: PromoteSpectatorPayload;
   [ClientEvents.KICK_SPECTATOR]: KickSpectatorPayload;
   [ClientEvents.CHALLENGE_W4]: ChallengeW4Payload;
+  [ClientEvents.NEXT_ROUND]: NextRoundPayload;
+  [ClientEvents.PLAY_AGAIN]: PlayAgainPayload;
 }
 
 export interface ServerPayloadMap {

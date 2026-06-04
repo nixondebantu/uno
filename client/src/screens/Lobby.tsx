@@ -30,6 +30,7 @@ import {
   roomState,
   myId,
   awaitingStartingColor,
+  isSpectator,
   pushToast,
 } from '../store.js';
 
@@ -84,6 +85,8 @@ export function Lobby(): JSX.Element {
   const players = room.players;
   const spectators = room.spectators;
   const canStart = isHost && players.length >= MIN_PLAYERS;
+  const iAmSpectator = isSpectator.value;
+  const seatsFull = players.length >= settings.maxPlayers;
 
   const queueSettingsChange = (patch: Partial<GameSettings>): void => {
     if (!isHost) return;
@@ -174,7 +177,8 @@ export function Lobby(): JSX.Element {
           </span>
         }
         actions={
-          isHost && room.status === 'waiting' ? (
+          isHost &&
+          (room.status === 'waiting' || room.status === 'round_end') ? (
             <>
               <button
                 type="button"
@@ -204,7 +208,10 @@ export function Lobby(): JSX.Element {
   return (
     <main class={styles.root}>
       <header class={styles.header}>
-        <div class={styles.codeBlock}>
+        <div
+          class={styles.codeBlock}
+          aria-label={`Room code ${room.code}`}
+        >
           <span class={styles.codeLabel}>Room</span>
           <span class={styles.codeBig}>{room.code}</span>
         </div>
@@ -213,6 +220,8 @@ export function Lobby(): JSX.Element {
             type="button"
             class={styles.iconButton}
             onClick={copyShareLink}
+            aria-label="Copy room link"
+            title="Copy room link"
           >
             <Copy size={16} /> Copy link
           </button>
@@ -220,11 +229,23 @@ export function Lobby(): JSX.Element {
             type="button"
             class={styles.iconButton}
             onClick={leaveRoom}
+            aria-label="Leave room"
           >
             <LogOut size={16} /> Leave
           </button>
         </div>
       </header>
+
+      {iAmSpectator ? (
+        <div class={styles.spectatorNotice} role="status" aria-live="polite">
+          <Eye size={16} aria-hidden="true" />
+          <span>
+            {seatsFull
+              ? `You joined as a spectator — all ${settings.maxPlayers} player seats are taken.`
+              : "You're spectating. The host can promote you between rounds."}
+          </span>
+        </div>
+      ) : null}
 
       <div class={styles.body}>
         <section class={styles.section} aria-label="Players">

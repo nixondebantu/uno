@@ -46,6 +46,7 @@ import {
   markConnected,
   markDisconnected,
   promoteSpectator,
+  resetMatchScores,
   toPublicGameState,
   toPublicRoom,
   updateSettings,
@@ -70,6 +71,7 @@ export interface SocketDeps {
     promoteSpectator: typeof promoteSpectator;
     kickSpectator: typeof kickSpectator;
     updateSettings: typeof updateSettings;
+    resetMatchScores: typeof resetMatchScores;
     toPublicRoom: typeof toPublicRoom;
     toPublicGameState: typeof toPublicGameState;
   };
@@ -93,6 +95,7 @@ export function defaultRoomsDeps(): SocketDeps['rooms'] {
     promoteSpectator,
     kickSpectator,
     updateSettings,
+    resetMatchScores,
     toPublicRoom,
     toPublicGameState,
   };
@@ -537,6 +540,65 @@ export function wireSockets(io: Server, deps: SocketDeps): void {
       }
       try {
         await turn.respondToW4Challenge(ctx.room, ctx.token, p.challenge, Date.now());
+      } catch (err) {
+        handleRoomError(socket, err);
+      }
+    });
+
+    // ---- NEXT_ROUND ------------------------------------------------------
+    socket.on(ClientEvents.NEXT_ROUND, (_raw: unknown) => {
+      const ctx = requireContext(socket, registry, rooms);
+      if (!ctx) return;
+      try {
+        const host = ctx.room.players.find((p) => p.isHost);
+        if (!host || host.id !== ctx.token) {
+          emitError(socket, 'not_host', 'only host can start next round');
+          return;
+        }
+        if (ctx.room.status !== 'round_end') {
+          emitError(socket, 'invalid_state', 'not in round_end');
+          return;
+        }
+        turn.startNextRound(ctx.room, ctx.token, Date.now());
+        // Mirror START_GAME: emit GAME_STARTED to each connected player so
+        // they receive their fresh hand alongside the new public state.
+        const pub = rooms.toPublicRoom(ctx.room);
+        const publicState = pub.game;
+        if (publicState && ctx.room.game) {
+          for (const ep of ctx.room.game.players) {
+            const sid = registry.socketFor(ep.id);
+            if (sid) {
+              io.to(sid).emit(ServerEvents.GAME_STARTED, {
+                gameState: publicState,
+                yourHand: ep.hand.slice(),
+              });
+            }
+          }
+        }
+      } catch (err) {
+        handleRoomError(socket, err);
+      }
+    });
+
+    // ---- PLAY_AGAIN ------------------------------------------------------
+    socket.on(ClientEvents.PLAY_AGAIN, (_raw: unknown) => {
+      const ctx = requireContext(socket, registry, rooms);
+      if (!ctx) return;
+      try {
+        // resetMatchScores enforces host-only + status===match_end.
+        rooms.resetMatchScores(ctx.room, ctx.token);
+        // Drop any lingering controller state for this room.
+        turn.cleanup(ctx.room.code);
+        const pub = rooms.toPublicRoom(ctx.room);
+        io.in(ctx.room.code).emit(ServerEvents.ROOM_UPDATED, {
+          players: pub.players,
+          spectators: pub.spectators,
+        });
+        // Send full RoomPublic so clients pick up status='waiting' + cleared
+        // game state — same pattern as UPDATE_SETTINGS.
+        io.in(ctx.room.code).emit(ServerEvents.ROOM_JOINED, {
+          roomState: pub,
+        });
       } catch (err) {
         handleRoomError(socket, err);
       }

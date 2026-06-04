@@ -65,6 +65,10 @@ export function Hand({
                 card={card}
                 width={80}
                 dim={!playable}
+                // Keep all cards in tab order; aria-disabled communicates
+                // "in your hand but not playable now" to AT users.
+                interactive
+                ariaDisabled={!playable}
                 onClick={playable ? () => onCardClick(card) : undefined}
               />
             </div>

@@ -13,12 +13,20 @@ import type { PlayerPublic } from '@uno/shared';
 
 import { PlayerAvatar } from './PlayerAvatar.js';
 import { TurnTimerRing } from './TurnTimerRing.js';
-import { gameState, myId, roomState, unoCalledBy } from '../store.js';
+import {
+  gameState,
+  isSpectator,
+  myId,
+  roomState,
+  unoCalledBy,
+} from '../store.js';
 import { useGameActions } from '../useGameActions.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
 
-const AVATAR_SIZE_MOBILE = 36;
+const AVATAR_SIZE_MOBILE = 32;
 const AVATAR_SIZE_DESKTOP = 44;
-const TIMER_RING_SIZE = 84;
+const TIMER_RING_SIZE_MOBILE = 64;
+const TIMER_RING_SIZE_DESKTOP = 84;
 
 export function OpponentRow(): JSX.Element | null {
   const room = roomState.value;
@@ -26,7 +34,11 @@ export function OpponentRow(): JSX.Element | null {
   const me = myId.value;
   if (!room) return null;
 
-  const opponents = room.players.filter((p) => p.id !== me);
+  // Spectators see every player in the row; players see only opponents.
+  const spectating = isSpectator.value;
+  const opponents = spectating
+    ? room.players
+    : room.players.filter((p) => p.id !== me);
   if (opponents.length === 0) return null;
 
   const currentIndex = game?.currentTurnIndex ?? -1;
@@ -41,7 +53,10 @@ export function OpponentRow(): JSX.Element | null {
     timerSeconds !== null ? turnStartedAt + timerSeconds * 1000 : 0;
 
   return (
-    <section class="opponent-row" aria-label="Opponents">
+    <section
+      class="opponent-row"
+      aria-label={spectating ? 'Players' : 'Opponents'}
+    >
       {opponents.map((p) => (
         <OpponentSlot
           key={p.id}
@@ -49,7 +64,9 @@ export function OpponentRow(): JSX.Element | null {
           isActive={p.id === currentPlayerId}
           timerDeadlineMs={deadlineMs}
           timerSeconds={timerSeconds}
-          atRisk={p.cardCount === 1 && !unoCalledBy.value.has(p.id)}
+          atRisk={
+            !spectating && p.cardCount === 1 && !unoCalledBy.value.has(p.id)
+          }
         />
       ))}
     </section>
@@ -72,6 +89,9 @@ function OpponentSlot({
   atRisk,
 }: OpponentSlotProps): JSX.Element {
   const actions = useGameActions();
+  const isDesktop = useMediaQuery('(min-width: 720px)');
+  const avatarSize = isDesktop ? AVATAR_SIZE_DESKTOP : AVATAR_SIZE_MOBILE;
+  const timerRingSize = isDesktop ? TIMER_RING_SIZE_DESKTOP : TIMER_RING_SIZE_MOBILE;
   const ring = !player.isConnected
     ? 'disconnected'
     : isActive
@@ -84,11 +104,7 @@ function OpponentSlot({
         <PlayerAvatar
           name={player.name}
           avatar={player.avatar}
-          size={
-            window.matchMedia('(min-width: 720px)').matches
-              ? AVATAR_SIZE_DESKTOP
-              : AVATAR_SIZE_MOBILE
-          }
+          size={avatarSize}
           ring={ring}
           subtitle={
             !player.isConnected
@@ -108,7 +124,7 @@ function OpponentSlot({
             <TurnTimerRing
               deadlineMs={timerDeadlineMs}
               totalSeconds={timerSeconds}
-              size={TIMER_RING_SIZE}
+              size={timerRingSize}
             />
           </div>
         ) : null}

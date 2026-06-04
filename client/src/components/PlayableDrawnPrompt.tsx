@@ -3,12 +3,13 @@
 // pass?" — Wild/W4 drawn requires a color first (delegated to ColorChooser).
 
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import type { PlayableColor } from '@uno/shared';
 
 import { ColorChooser } from './ColorChooser.js';
 import { playableDrawn } from '../store.js';
 import { useGameActions } from '../useGameActions.js';
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 
 function cardLabel(color: string, type: string): string {
   return `${color === 'wild' ? 'Wild' : color} ${type.replace('_', ' ')}`;
@@ -18,6 +19,8 @@ export function PlayableDrawnPrompt(): JSX.Element | null {
   const drawn = playableDrawn.value;
   const actions = useGameActions();
   const [pickingColor, setPickingColor] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, drawn !== null && !pickingColor);
 
   if (!drawn) return null;
 
@@ -54,7 +57,7 @@ export function PlayableDrawnPrompt(): JSX.Element | null {
       aria-modal="true"
       aria-label="Play drawn card?"
     >
-      <div class="modal playable-drawn-modal">
+      <div class="modal playable-drawn-modal" ref={modalRef}>
         <h2 class="playable-drawn-modal__title">You drew a playable card</h2>
         <p class="playable-drawn-modal__body">
           {cardLabel(drawn.color, drawn.type)} — play it now or pass?

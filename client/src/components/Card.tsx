@@ -28,6 +28,14 @@ export interface CardProps {
   className?: string;
   /** Accessibility label override. */
   ariaLabel?: string;
+  /**
+   * Force the card to be a focusable button regardless of `onClick`. Used by
+   * `Hand` so non-playable cards stay reachable via Tab and announce
+   * `aria-disabled`.
+   */
+  interactive?: boolean;
+  /** Override the aria-disabled state. Defaults to !onClick && interactive. */
+  ariaDisabled?: boolean;
 }
 
 function defaultAriaLabel(card: UnoCard, faceDown: boolean): string {
@@ -57,16 +65,20 @@ export function Card({
   onClick,
   className,
   ariaLabel,
+  interactive,
+  ariaDisabled,
 }: CardProps): JSX.Element {
   const svg = useMemo(
     () => renderCardSvg(card, { faceDown }),
     [card.id, card.color, card.type, faceDown],
   );
 
+  const isButton = Boolean(onClick) || Boolean(interactive);
+
   const classes = ['uno-card'];
   if (dim) classes.push('uno-card--dim');
   if (selected) classes.push('uno-card--selected');
-  if (onClick) classes.push('uno-card--interactive');
+  if (isButton) classes.push('uno-card--interactive');
   if (className) classes.push(className);
 
   const handleKey = (e: KeyboardEvent): void => {
@@ -77,6 +89,13 @@ export function Card({
     }
   };
 
+  const resolvedAriaDisabled =
+    ariaDisabled !== undefined
+      ? ariaDisabled
+      : isButton && !onClick
+        ? true
+        : undefined;
+
   return (
     <div
       class={classes.join(' ')}
@@ -84,11 +103,12 @@ export function Card({
         width: `${width}px`,
         height: `${(width * 3) / 2}px`,
       }}
-      role={onClick ? 'button' : 'img'}
-      tabIndex={onClick ? 0 : -1}
+      role={isButton ? 'button' : 'img'}
+      tabIndex={isButton ? 0 : -1}
       aria-label={ariaLabel ?? defaultAriaLabel(card, faceDown)}
+      aria-disabled={resolvedAriaDisabled}
       onClick={onClick}
-      onKeyDown={onClick ? handleKey : undefined}
+      onKeyDown={isButton ? handleKey : undefined}
       // Inject the pre-built SVG markup. The SVG renderer is the only source
       // of truth for card visuals.
       dangerouslySetInnerHTML={{ __html: svg }}

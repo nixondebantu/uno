@@ -508,6 +508,24 @@ export function updateSettings(
 }
 
 /**
+ * Reset cumulative scores and return the room to lobby. Host-only; allowed
+ * only after a completed match (status === 'match_end'). Mutates the room.
+ */
+export function resetMatchScores(
+  room: RoomRecord,
+  requesterToken: string,
+): RoomRecord {
+  assertHost(room, requesterToken);
+  if (room.status !== 'match_end') {
+    throw new RoomError('invalid_state', 'match has not ended');
+  }
+  for (const p of room.players) p.score = 0;
+  room.game = null;
+  room.status = 'waiting';
+  return room;
+}
+
+/**
  * Inject engine state and status into the room. Used by turnController to
  * push the authoritative game state after each mutation. Mutates the room.
  */

@@ -19,7 +19,10 @@ import {
   defaultRoomsDeps,
   wireSockets,
 } from '../src/sockets.js';
-import { _resetForTests as resetRooms } from '../src/roomManager.js';
+import {
+  _resetForTests as resetRooms,
+  getRoom,
+} from '../src/roomManager.js';
 
 interface Harness {
   httpServer: HttpServer;
@@ -248,6 +251,78 @@ describe('sockets', () => {
     );
     expect(disc.playerId).toBe(bToken);
     a.disconnect();
+  });
+
+  it('next_round from non-host → not_host error', async () => {
+    const { code, a, b, logA, logB } = await setupTwoPlayers(h, {
+      settings: { turnTimerSeconds: null, w4ChallengeEnabled: false },
+    });
+    // Park the room directly in round_end so we exercise only the handler
+    // path without dealing through a real round.
+    const room = getRoom(code);
+    if (!room) throw new Error('room missing');
+    room.status = 'round_end';
+    b.emit(ClientEvents.NEXT_ROUND, {});
+    const err = await logB.waitFor<{ code: string }>(ServerEvents.ERROR);
+    expect(err.code).toBe('not_host');
+    void logA;
+    a.disconnect();
+    b.disconnect();
+  });
+
+  it('next_round from host in round_end → both players receive game_started', async () => {
+    const { code, a, b, logA, logB } = await setupTwoPlayers(h, {
+      settings: { turnTimerSeconds: null, w4ChallengeEnabled: false },
+    });
+    a.emit(ClientEvents.START_GAME, {});
+    await Promise.all([
+      logA.waitFor(ServerEvents.GAME_STARTED),
+      logB.waitFor(ServerEvents.GAME_STARTED),
+    ]);
+    // Force the room to round_end so the host can request next round.
+    const room = getRoom(code);
+    if (!room) throw new Error('room missing');
+    room.status = 'round_end';
+    a.emit(ClientEvents.NEXT_ROUND, {});
+    const [aGame, bGame] = await Promise.all([
+      logA.waitFor<{ yourHand: { id: string }[] }>(ServerEvents.GAME_STARTED),
+      logB.waitFor<{ yourHand: { id: string }[] }>(ServerEvents.GAME_STARTED),
+    ]);
+    expect(aGame.yourHand.length).toBeGreaterThanOrEqual(7);
+    expect(bGame.yourHand.length).toBeGreaterThanOrEqual(7);
+    a.disconnect();
+    b.disconnect();
+  });
+
+  it('play_again from non-host → not_host error', async () => {
+    const { code, a, b, logA, logB } = await setupTwoPlayers(h);
+    const room = getRoom(code);
+    if (!room) throw new Error('room missing');
+    room.status = 'match_end';
+    b.emit(ClientEvents.PLAY_AGAIN, {});
+    const err = await logB.waitFor<{ code: string }>(ServerEvents.ERROR);
+    expect(err.code).toBe('not_host');
+    void logA;
+    a.disconnect();
+    b.disconnect();
+  });
+
+  it('play_again from host in match_end → room returns to waiting with zeroed scores', async () => {
+    const { code, a, b, logA, logB } = await setupTwoPlayers(h);
+    const room = getRoom(code);
+    if (!room) throw new Error('room missing');
+    room.status = 'match_end';
+    if (room.players[0]) room.players[0].score = 500;
+    if (room.players[1]) room.players[1].score = 320;
+    a.emit(ClientEvents.PLAY_AGAIN, {});
+    const updated = await logA.waitFor<{ roomState: { status: string; players: { score: number }[] } }>(
+      ServerEvents.ROOM_JOINED,
+    );
+    expect(updated.roomState.status).toBe('waiting');
+    expect(updated.roomState.players.every((p) => p.score === 0)).toBe(true);
+    void logB;
+    a.disconnect();
+    b.disconnect();
   });
 
   it('reconnect with stored token → player_reconnected + game_state + your_hand', async () => {

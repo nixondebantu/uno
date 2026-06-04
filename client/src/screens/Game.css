@@ -6,11 +6,22 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: var(--space-3);
+  padding:
+    calc(var(--space-3) + var(--safe-top))
+    calc(var(--space-3) + var(--safe-right))
+    calc(var(--space-3) + var(--safe-bottom))
+    calc(var(--space-3) + var(--safe-left));
   gap: var(--space-3);
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
+}
+
+@media (max-width: 480px) {
+  .game {
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
 }
 
 .game__loading {
@@ -170,6 +181,25 @@
   }
 }
 
+/* Mobile: tighter row + name truncation past ~8 chars. */
+@media (max-width: 480px) {
+  .opponent-row {
+    gap: var(--space-2);
+    padding: 0;
+  }
+  .opponent-row__slot .avatar {
+    padding: var(--space-2);
+    max-width: 88px;
+  }
+  .opponent-row__slot .avatar__name {
+    font-size: var(--fs-xs);
+    max-width: 8ch;
+  }
+  .opponent-row__slot .avatar__subtitle {
+    font-size: 0.625rem;
+  }
+}
+
 /* ---------- TurnTimerRing ---------- */
 .turn-timer-ring {
   display: block;
@@ -205,6 +235,25 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+}
+
+@media (max-width: 480px) {
+  .self-status {
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+  .self-status .avatar {
+    padding: var(--space-2);
+    max-width: 110px;
+  }
+  .self-status .avatar__name {
+    font-size: var(--fs-xs);
+    max-width: 8ch;
+  }
+  .uno-button {
+    font-size: var(--fs-xl);
+    padding: var(--space-2) var(--space-5);
+  }
 }
 
 .self-status__avatar-wrap {
@@ -389,6 +438,16 @@
 @media (max-width: 640px) {
   .table__indicators {
     flex-direction: row;
+  }
+}
+
+@media (max-width: 480px) {
+  .table {
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+  }
+  .table__piles {
+    gap: var(--space-3);
   }
 }
 
