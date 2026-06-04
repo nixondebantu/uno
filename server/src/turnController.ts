@@ -142,7 +142,14 @@ interface AwaitingStartingColor {
 export interface TurnControllerOptions {
   /** W4 challenge prompt window (default 5s). */
   w4ChallengeWindowMs?: number;
-  /** UNO catch wall-clock fallback (default 2s). */
+  /**
+   * UNO catch wall-clock fallback (default 10s). The catch window normally
+   * closes when the *next* player takes an action (play/draw) — see the
+   * clear-on-next-action logic in playCard/drawCard. This value is only a
+   * backstop for when the next player is idle/disconnected, so it must be
+   * generous enough for a human to actually click "Catch!" (a 2s cap made the
+   * button effectively unusable: render + reaction + round-trip > 2s).
+   */
   unoCatchWindowMs?: number;
   /** Used when settings.turnTimerSeconds is null (default 10s). */
   fallbackTimerSeconds?: number;
@@ -185,7 +192,7 @@ export class TurnController {
   constructor(emit: TurnEvents, opts: TurnControllerOptions = {}) {
     this.emit = emit;
     this.w4WindowMs = opts.w4ChallengeWindowMs ?? 5000;
-    this.unoCatchWindowMs = opts.unoCatchWindowMs ?? 2000;
+    this.unoCatchWindowMs = opts.unoCatchWindowMs ?? 10000;
     this.fallbackTimerSeconds = opts.fallbackTimerSeconds ?? 10;
     this.disconnectGraceMs = opts.disconnectGraceMs ?? 5000;
     this.rngFactory = opts.rngFactory ?? makeSeededRng;
