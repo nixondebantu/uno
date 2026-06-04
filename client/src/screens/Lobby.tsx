@@ -75,7 +75,7 @@ export function Lobby(): JSX.Element {
   if (!room) {
     return (
       <main class={styles.root}>
-        <p>Loading lobby…</p>
+        <p>Joining room…</p>
       </main>
     );
   }

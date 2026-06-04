@@ -141,3 +141,17 @@ export function onConnectionChange(
     s.off('disconnect', onDisconnect);
   };
 }
+
+/**
+ * Subscribe to the socket `connect` event. Fires on the INITIAL connection and
+ * again after every automatic reconnect (network blip, server restart). This is
+ * the hook used to (re)issue an auto-join so a refreshed/reconnected player is
+ * rebound to their seat. Returns an unsubscribe fn.
+ */
+export function onConnect(handler: () => void): () => void {
+  const s = connect();
+  s.on('connect', handler);
+  return () => {
+    s.off('connect', handler);
+  };
+}

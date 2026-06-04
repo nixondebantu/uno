@@ -404,5 +404,14 @@ export function wireServerEvents(): void {
   on(ServerEvents.ERROR, (payload) => {
     pendingError.value = { code: payload.code, message: payload.message };
     pushToast('error', payload.message, 3500);
+    // Auto-join landed on a room that's gone/invalid and we never got a
+    // ROOM_JOINED — don't strand the user on the "joining" loading screen.
+    if (
+      roomState.value === null &&
+      (payload.code === 'room_not_found' || payload.code === 'invalid_name')
+    ) {
+      navigate('/', { replace: true });
+      screen.value = 'home';
+    }
   });
 }
