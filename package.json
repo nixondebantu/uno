@@ -1,0 +1,19 @@
+{
+  "name": "uno",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Real-time multiplayer UNO (browser, docker)",
+  "type": "module",
+  "scripts": {
+    "dev:server": "pnpm -F @uno/server dev",
+    "dev:client": "pnpm -F @uno/client dev",
+    "build": "pnpm -F @uno/shared build && pnpm -F @uno/client build && pnpm -F @uno/server build",
+    "typecheck": "pnpm -F @uno/shared typecheck && pnpm -F @uno/server typecheck && pnpm -F @uno/client typecheck",
+    "test": "pnpm -F @uno/server test",
+    "start": "pnpm -F @uno/server start"
+  },
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

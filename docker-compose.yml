@@ -1,0 +1,13 @@
+services:
+  uno:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: uno:latest
+    container_name: uno
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
