@@ -10,7 +10,9 @@
     "build": "pnpm -F @uno/shared build && pnpm -F @uno/client build && pnpm -F @uno/server build",
     "typecheck": "pnpm -F @uno/shared typecheck && pnpm -F @uno/server typecheck && pnpm -F @uno/client typecheck",
     "test": "pnpm -F @uno/server test",
-    "start": "pnpm -F @uno/server start"
+    "start": "pnpm -F @uno/server start",
+    "docker:up": "docker compose up --build",
+    "ngrok:up": "ngrok http 3000"
   },
   "packageManager": "pnpm@10.25.0",
   "engines": {
