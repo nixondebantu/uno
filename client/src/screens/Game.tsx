@@ -16,13 +16,15 @@ import { StartingColorPrompt } from '../components/StartingColorPrompt.js';
 import { PlayableDrawnPrompt } from '../components/PlayableDrawnPrompt.js';
 import { Table } from '../components/Table.js';
 import { SpectatorTable } from '../components/SpectatorTable.js';
-import { gameState, isSpectator, roomState } from '../store.js';
+import { TurnGlow } from '../components/TurnGlow.js';
+import { gameState, isSpectator, myId, roomState } from '../store.js';
 import './Game.css';
 
 export function Game(): JSX.Element {
   const room = roomState.value;
   const game = gameState.value;
   const spectating = isSpectator.value;
+  const me = myId.value;
 
   if (!room || !game) {
     return (
@@ -32,8 +34,15 @@ export function Game(): JSX.Element {
     );
   }
 
+  const currentPlayerId =
+    game.currentTurnIndex >= 0 && game.currentTurnIndex < room.players.length
+      ? room.players[game.currentTurnIndex].id
+      : null;
+  const isMyTurn = !spectating && me !== null && currentPlayerId === me;
+
   return (
     <main class="game">
+      {isMyTurn ? <TurnGlow color={game.currentColor} /> : null}
       <GameHeader />
       <OpponentRow />
       {spectating ? <SpectatorTable /> : <Table />}
