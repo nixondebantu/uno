@@ -8,6 +8,7 @@
 //     called UNO yet (tracked via store.unoCalledBy)
 
 import type { JSX } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { Hand as HandIcon } from 'lucide-preact';
 import type { PlayerPublic } from '@uno/shared';
 
@@ -22,6 +23,17 @@ import {
 } from '../store.js';
 import { useGameActions } from '../useGameActions.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
+
+function randomCatchStyle() {
+  // Random position anywhere on screen, with small margin from edges
+  const top = 8 + Math.random() * 80;  // 8%–88% viewport height
+  const left = 5 + Math.random() * 85; // 5%–90% viewport width
+  return {
+    top: `${top.toFixed(1)}%`,
+    left: `${left.toFixed(1)}%`,
+    transform: 'translate(-50%, -50%)',
+  };
+}
 
 const AVATAR_SIZE_MOBILE = 32;
 const AVATAR_SIZE_DESKTOP = 44;
@@ -98,6 +110,11 @@ function OpponentSlot({
       ? 'active'
       : null;
 
+  const [catchStyle, setCatchStyle] = useState(randomCatchStyle);
+  useEffect(() => {
+    if (atRisk) setCatchStyle(randomCatchStyle());
+  }, [atRisk]);
+
   return (
     <div class="opponent-row__slot">
       <div class="opponent-row__avatar-wrap">
@@ -128,18 +145,19 @@ function OpponentSlot({
             />
           </div>
         ) : null}
+        {atRisk ? (
+          <button
+            type="button"
+            class="opponent-row__catch"
+            style={catchStyle}
+            onClick={() => actions.catchUno(player.id)}
+            aria-label={`Catch ${player.name} for not calling UNO`}
+            title={`Catch ${player.name}!`}
+          >
+            Catch!
+          </button>
+        ) : null}
       </div>
-      {atRisk ? (
-        <button
-          type="button"
-          class="opponent-row__catch"
-          onClick={() => actions.catchUno(player.id)}
-          aria-label={`Catch ${player.name} for not calling UNO`}
-          title={`Catch ${player.name}!`}
-        >
-          Catch!
-        </button>
-      ) : null}
     </div>
   );
 }

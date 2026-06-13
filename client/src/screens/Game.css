@@ -160,6 +160,8 @@
 }
 
 .opponent-row__catch {
+  position: fixed;
+  z-index: 100;
   font-size: var(--fs-xs);
   padding: 2px var(--space-2);
   background: var(--color-warn);
@@ -167,6 +169,7 @@
   color: #1a1a1a;
   font-weight: 700;
   border-radius: var(--radius-pill);
+  white-space: nowrap;
   animation: catch-pulse 1.4s ease-in-out infinite;
 }
 
