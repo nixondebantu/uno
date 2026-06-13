@@ -199,6 +199,7 @@ export interface ErrorPayload {
 
 export interface W4ChallengePromptPayload {
   againstPlayerId: string;
+  challengerId: string;
   // Epoch ms after which auto-accept fires.
   deadlineMs: number;
 }

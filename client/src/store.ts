@@ -324,8 +324,7 @@ export function wireServerEvents(): void {
   });
 
   on(ServerEvents.W4_CHALLENGE_PROMPT, (payload) => {
-    // Server addresses this private event only to the would-be challenger; if
-    // it ever fans out, we still guard by checking our id.
+    if (payload.challengerId !== myId.value) return;
     w4ChallengePrompt.value = {
       againstPlayerId: payload.againstPlayerId,
       deadlineMs: payload.deadlineMs,
